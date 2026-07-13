@@ -18,7 +18,7 @@ pub fn main(init: std.process.Init) !void {
         filepath = args[1];
 
         if (!std.fs.path.isAbsolute(filepath)) {
-            std.debug.print("Bitte einen absoluten Pfad angeben.\n", .{});
+            std.debug.print("Please provide an absolute path.\n", .{});
             std.process.exit(1);
         }
 
@@ -30,7 +30,7 @@ pub fn main(init: std.process.Init) !void {
             } else if (std.mem.eql(u8, arg, "-c")) {
                 flag_c = true;
             } else {
-                std.debug.print("Unbekanntes Flag: {s}\n", .{arg});
+                std.debug.print("Unknown flag: {s}\n", .{arg});
                 std.process.exit(1);
             }
         }
@@ -38,7 +38,7 @@ pub fn main(init: std.process.Init) !void {
         const no_flags = !flag_w and !flag_l and !flag_c;
 
         var file = std.Io.Dir.openFileAbsolute(io, filepath, .{}) catch |err| {
-            std.debug.print("Konnte Datei nicht oeffnen. {}\n", .{err});
+            std.debug.print("Could not open file: {}\n", .{err});
             std.process.exit(1);
         };
         defer file.close(io);
@@ -46,28 +46,28 @@ pub fn main(init: std.process.Init) !void {
         const filesize = try file.length(io); // * Bytes
 
         const content = allocator.alloc(u8, filesize) catch |err| {
-            std.debug.print("Konnte Speicher nicht allozieren: {}\n", .{err});
+            std.debug.print("Could not allocate memory: {}\n", .{err});
             std.process.exit(1);
         };
         var fr = file.reader(io, content);
         fr.interface.readSliceAll(content) catch |err| {
-            std.debug.print("Fehler beim Lesen der Datei: {}\n", .{err});
+            std.debug.print("Error while reading file: {}\n", .{err});
             std.process.exit(1);
         };
 
         const result = counter.count(content);
 
         if (flag_l or no_flags) {
-            std.debug.print("Zeilen: {}\n", .{result.lines});
+            std.debug.print("Lines: {}\n", .{result.lines});
         }
         if (flag_w or no_flags) {
-            std.debug.print("Woerter: {}\n", .{result.words});
+            std.debug.print("Words: {}\n", .{result.words});
         }
         if (flag_c or no_flags) {
             std.debug.print("Bytes: {}\n", .{filesize});
         }
     } else {
-        std.debug.print("Du musst den Pfad der Datei angeben, der gelesen werden soll.\n", .{});
+        std.debug.print("You must specify the path of the file to be read.\n", .{});
         std.process.exit(1);
     }
 }
