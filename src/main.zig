@@ -92,7 +92,7 @@ pub fn main(init: std.process.Init) !void {
                 std.debug.print("{s} - Words: {}\n", .{ resolved_path, result.words });
             }
             if (flag_c or no_flags) {
-                std.debug.print("{s} - Bytes: {}\n\n", .{ resolved_path, filesize });
+                std.debug.print("{s} - Bytes: {}\n", .{ resolved_path, filesize });
             }
 
             total_lines += result.lines;

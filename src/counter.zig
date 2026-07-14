@@ -7,15 +7,10 @@ pub const Counts = struct {
 
 pub fn count(content: []const u8) Counts {
     var lines: usize = 0;
-    for (content) |byte| { // * Lines
-        if (byte == '\n') {
-            lines += 1;
-        }
-    }
-
     var words: usize = 0;
     var in_word = false;
-    for (content) |byte| { // * Words
+    for (content) |byte| {
+        if (byte == '\n') lines += 1;
         if (!std.ascii.isWhitespace(byte) and !in_word) {
             words += 1;
             in_word = true;
