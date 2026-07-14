@@ -1,4 +1,4 @@
-# wordcount
+# wczig
 
 A small `wc`-inspired command-line tool written in Zig. Counts lines, words, and bytes in one or more files. Made for learning.
 
