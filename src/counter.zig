@@ -13,10 +13,6 @@ pub fn count(content: []const u8) Counts {
         }
     }
 
-    if (content.len != 0 and content[content.len - 1] != '\n') {
-        lines += 1;
-    }
-
     var words: usize = 0;
     var in_word = false;
     for (content) |byte| { // * Words
