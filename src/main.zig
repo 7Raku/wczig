@@ -1,6 +1,18 @@
 const std = @import("std");
 const counter = @import("counter.zig");
 
+fn resolvePath(allocator: std.mem.Allocator, io: std.Io, path: []const u8) ![]const u8 {
+    if (std.fs.path.isAbsolute(path)) {
+        return path;
+    }
+
+    var buf: [std.fs.max_path_bytes]u8 = undefined;
+    const len = try std.Io.Dir.cwd().realPath(io, &buf);
+    const cwd_string = buf[0..len];
+
+    return std.fs.path.resolve(allocator, &.{ cwd_string, path });
+}
+
 pub fn main(init: std.process.Init) !void {
     var flag_w = false;
     var flag_l = false;
@@ -46,12 +58,12 @@ pub fn main(init: std.process.Init) !void {
         const no_flags = !flag_w and !flag_l and !flag_c;
 
         for (filepaths.items) |path| {
-            if (!std.fs.path.isAbsolute(path)) {
-                std.debug.print("Please provide an absolute path.\n", .{});
+            const resolved_path = resolvePath(allocator, io, path) catch |err| {
+                std.debug.print("Could not resolve path: {}\n", .{err});
                 std.process.exit(1);
-            }
+            };
 
-            var file = std.Io.Dir.openFileAbsolute(io, path, .{}) catch |err| {
+            var file = std.Io.Dir.openFileAbsolute(io, resolved_path, .{}) catch |err| {
                 std.debug.print("Could not open file: {}\n", .{err});
                 std.process.exit(1);
             };
@@ -74,13 +86,13 @@ pub fn main(init: std.process.Init) !void {
             const result = counter.count(content);
 
             if (flag_l or no_flags) {
-                std.debug.print("{s} - Lines: {}\n", .{ path, result.lines });
+                std.debug.print("{s} - Lines: {}\n", .{ resolved_path, result.lines });
             }
             if (flag_w or no_flags) {
-                std.debug.print("{s} - Words: {}\n", .{ path, result.words });
+                std.debug.print("{s} - Words: {}\n", .{ resolved_path, result.words });
             }
             if (flag_c or no_flags) {
-                std.debug.print("{s} - Bytes: {}\n\n", .{ path, filesize });
+                std.debug.print("{s} - Bytes: {}\n\n", .{ resolved_path, filesize });
             }
 
             total_lines += result.lines;
