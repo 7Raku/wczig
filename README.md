@@ -23,7 +23,7 @@ The resulting binary will be available under `zig-out/bin/`.
 ## Usage
 
 ```
-Usage: wordcount [OPTIONS] <FILE>...
+Usage: wczig [OPTIONS] <FILE>...
 
 Count lines, words, and bytes in one or more files.
 
