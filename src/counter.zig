@@ -1,14 +1,4 @@
-fn is_whitespace(byte: u8) bool {
-    if (byte == ' ') {
-        return true;
-    } else if (byte == '\t') {
-        return true;
-    } else if (byte == '\n') {
-        return true;
-    } else {
-        return false;
-    }
-}
+const std = @import("std");
 
 pub const Counts = struct {
     lines: usize,
@@ -30,10 +20,10 @@ pub fn count(content: []const u8) Counts {
     var words: usize = 0;
     var in_word = false;
     for (content) |byte| { // * Words
-        if (!is_whitespace(byte) and !in_word) {
+        if (!std.ascii.isWhitespace(byte) and !in_word) {
             words += 1;
             in_word = true;
-        } else if (is_whitespace(byte)) {
+        } else if (std.ascii.isWhitespace(byte)) {
             in_word = false;
         }
     }
