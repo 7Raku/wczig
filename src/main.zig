@@ -43,18 +43,20 @@ pub fn main(init: std.process.Init) !void {
         var total_words: usize = 0;
         var total_bytes: usize = 0;
 
+        const no_flags = !flag_w and !flag_l and !flag_c;
+
         for (filepaths.items) |path| {
             if (!std.fs.path.isAbsolute(path)) {
                 std.debug.print("Please provide an absolute path.\n", .{});
                 std.process.exit(1);
             }
 
-            const no_flags = !flag_w and !flag_l and !flag_c;
-
             var file = std.Io.Dir.openFileAbsolute(io, path, .{}) catch |err| {
                 std.debug.print("Could not open file: {}\n", .{err});
                 std.process.exit(1);
             };
+
+            defer file.close(io);
 
             const filesize = try file.length(io); // * Bytes
 
@@ -84,8 +86,6 @@ pub fn main(init: std.process.Init) !void {
             total_lines += result.lines;
             total_words += result.words;
             total_bytes += filesize;
-
-            file.close(io);
         }
 
         if (filepaths.items.len > 1) {
