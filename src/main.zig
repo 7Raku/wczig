@@ -1,6 +1,25 @@
 const std = @import("std");
 const counter = @import("counter.zig");
 
+const help_text =
+    \\Usage: wczig [OPTIONS] <FILE>...
+    \\
+    \\Count lines, words, and bytes in one or more files.
+    \\
+    \\Options:
+    \\  -l           Print line count
+    \\  -w           Print word count
+    \\  -c           Print byte count
+    \\  -h, --help   Show this help message
+    \\
+    \\If no options are given, all three counts are shown.
+    \\
+    \\Examples:
+    \\  wczig file.txt
+    \\  wczig -l -w file1.txt file2.txt
+    \\
+;
+
 fn resolvePath(allocator: std.mem.Allocator, io: std.Io, path: []const u8) ![]const u8 {
     if (std.fs.path.isAbsolute(path)) {
         return path;
@@ -29,7 +48,7 @@ pub fn main(init: std.process.Init) !void {
 
     for (args[1..]) |arg| {
         if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
-            std.debug.print("Help\n", .{});
+            std.debug.print("{s}", .{help_text});
             std.process.exit(0);
         } else if (std.mem.startsWith(u8, arg, "-")) {
             if (std.mem.eql(u8, arg, "-w")) {
@@ -85,15 +104,12 @@ pub fn main(init: std.process.Init) !void {
 
             const result = counter.count(content);
 
-            if (flag_l or no_flags) {
-                std.debug.print("{s} - Lines: {}\n", .{ resolved_path, result.lines });
-            }
-            if (flag_w or no_flags) {
-                std.debug.print("{s} - Words: {}\n", .{ resolved_path, result.words });
-            }
-            if (flag_c or no_flags) {
-                std.debug.print("{s} - Bytes: {}\n", .{ resolved_path, filesize });
-            }
+            const filename = std.fs.path.basename(resolved_path);
+            std.debug.print("{s}\n", .{filename});
+            if (flag_l or no_flags) std.debug.print("  Lines: {}\n", .{result.lines});
+            if (flag_w or no_flags) std.debug.print("  Words: {}\n", .{result.words});
+            if (flag_c or no_flags) std.debug.print("  Bytes: {}\n", .{filesize});
+            std.debug.print("\n", .{});
 
             total_lines += result.lines;
             total_words += result.words;
@@ -101,9 +117,10 @@ pub fn main(init: std.process.Init) !void {
         }
 
         if (filepaths.items.len > 1) {
-            std.debug.print("Total - Lines: {}\n", .{total_lines});
-            std.debug.print("Total - Words: {}\n", .{total_words});
-            std.debug.print("Total - Bytes: {}\n", .{total_bytes});
+            std.debug.print("Total\n", .{});
+            if (flag_l or no_flags) std.debug.print("  Lines: {}\n", .{total_lines});
+            if (flag_w or no_flags) std.debug.print("  Words: {}\n", .{total_words});
+            if (flag_c or no_flags) std.debug.print("  Bytes: {}\n", .{total_bytes});
         }
     }
 }
