@@ -38,6 +38,10 @@ pub fn main(init: std.process.Init) !void {
     var flag_c = false;
     const io = init.io;
 
+    var stdout_buf: [4096]u8 = undefined;
+    var stdout_writer = std.Io.File.stdout().writer(io, &stdout_buf);
+    const stdout = &stdout_writer.interface;
+
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
 
@@ -79,37 +83,45 @@ pub fn main(init: std.process.Init) !void {
         for (filepaths.items) |path| {
             const resolved_path = resolvePath(allocator, io, path) catch |err| {
                 std.debug.print("Could not resolve path: {}\n", .{err});
+                stdout.flush() catch {};
                 std.process.exit(1);
             };
 
             var file = std.Io.Dir.openFileAbsolute(io, resolved_path, .{}) catch |err| {
                 std.debug.print("Could not open file: {}\n", .{err});
+                stdout.flush() catch {};
                 std.process.exit(1);
             };
 
             defer file.close(io);
 
-            const filesize = try file.length(io); // * Bytes
+            const filesize = file.length(io) catch |err| {
+                std.debug.print("Could not get file size: {}\n", .{err});
+                stdout.flush() catch {};
+                std.process.exit(1);
+            };
 
             const content = allocator.alloc(u8, filesize) catch |err| {
                 std.debug.print("Could not allocate memory: {}\n", .{err});
+                stdout.flush() catch {};
                 std.process.exit(1);
             };
 
             var fr = file.reader(io, content);
             fr.interface.readSliceAll(content) catch |err| {
                 std.debug.print("Error while reading file: {}\n", .{err});
+                stdout.flush() catch {};
                 std.process.exit(1);
             };
 
             const result = counter.count(content);
 
             const filename = std.fs.path.basename(resolved_path);
-            std.debug.print("{s}\n", .{filename});
-            if (flag_l or no_flags) std.debug.print("  Lines: {}\n", .{result.lines});
-            if (flag_w or no_flags) std.debug.print("  Words: {}\n", .{result.words});
-            if (flag_c or no_flags) std.debug.print("  Bytes: {}\n", .{filesize});
-            std.debug.print("\n", .{});
+            try stdout.print("{s}\n", .{filename});
+            if (flag_l or no_flags) try stdout.print("  Lines: {}\n", .{result.lines});
+            if (flag_w or no_flags) try stdout.print("  Words: {}\n", .{result.words});
+            if (flag_c or no_flags) try stdout.print("  Bytes: {}\n", .{filesize});
+            try stdout.print("\n", .{});
 
             total_lines += result.lines;
             total_words += result.words;
@@ -117,10 +129,12 @@ pub fn main(init: std.process.Init) !void {
         }
 
         if (filepaths.items.len > 1) {
-            std.debug.print("Total\n", .{});
-            if (flag_l or no_flags) std.debug.print("  Lines: {}\n", .{total_lines});
-            if (flag_w or no_flags) std.debug.print("  Words: {}\n", .{total_words});
-            if (flag_c or no_flags) std.debug.print("  Bytes: {}\n", .{total_bytes});
+            try stdout.print("Total\n", .{});
+            if (flag_l or no_flags) try stdout.print("  Lines: {}\n", .{total_lines});
+            if (flag_w or no_flags) try stdout.print("  Words: {}\n", .{total_words});
+            if (flag_c or no_flags) try stdout.print("  Bytes: {}\n", .{total_bytes});
         }
+
+        try stdout.flush();
     }
 }
