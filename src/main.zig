@@ -55,15 +55,17 @@ pub fn main(init: std.process.Init) !void {
             std.debug.print("{s}", .{help_text});
             std.process.exit(0);
         } else if (std.mem.startsWith(u8, arg, "-")) {
-            if (std.mem.eql(u8, arg, "-w")) {
-                flag_w = true;
-            } else if (std.mem.eql(u8, arg, "-l")) {
-                flag_l = true;
-            } else if (std.mem.eql(u8, arg, "-c")) {
-                flag_c = true;
-            } else {
-                std.debug.print("Unknown flag: {s}\n", .{arg});
-                std.process.exit(1);
+            for (arg[1..]) |flag| {
+                if (flag == 'w') {
+                    flag_w = true;
+                } else if (flag == 'l') {
+                    flag_l = true;
+                } else if (flag == 'c') {
+                    flag_c = true;
+                } else {
+                    std.debug.print("Unknown flag: {s}\n", .{arg});
+                    std.process.exit(1);
+                }
             }
         } else {
             try filepaths.append(allocator, arg);
